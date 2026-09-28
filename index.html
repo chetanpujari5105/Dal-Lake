@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1b130e" />
+    <meta name="description" content="A stylised, playable boat journey across Dal Lake, Srinagar, at golden hour." />
+    <title>Dal Lake: A Shikara Journey</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='30' r='14' fill='%23f0a64a'/%3E%3Cpath d='M6 44c10 6 42 6 52 0-4 8-44 8-52 0z' fill='%235a3520'/%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="scene" aria-label="3D view of Dal Lake. Use W A S D or the arrow keys to paddle."></canvas>
+      <div class="scrim" id="scrim" aria-hidden="true"></div>
+
+      <section id="title" class="title-card" aria-labelledby="title-heading">
+        <p class="eyebrow">Srinagar · Kashmir</p>
+        <h1 id="title-heading">Dal Lake <span>A Shikara Journey</span></h1>
+        <p class="lede">
+          Paddle a painted shikara past carved houseboats, floating gardens and Char Chinar as the light changes over
+          the lake.
+        </p>
+        <div class="options">
+          <div class="seg" role="group" aria-label="Time of day">
+            <button type="button" data-time="dawn" aria-pressed="false">Dawn</button>
+            <button type="button" data-time="sunset" aria-pressed="true">Sunset</button>
+            <button type="button" data-time="night" aria-pressed="false">Night</button>
+          </div>
+          <div class="seg" role="group" aria-label="Weather">
+            <button type="button" data-weather="clear" aria-pressed="true">Clear</button>
+            <button type="button" data-weather="rain" aria-pressed="false">Rain</button>
+          </div>
+          <button type="button" class="chip" data-action="sound" aria-pressed="true">
+            <svg class="i-sound-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" /></svg>
+            <svg class="i-sound-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M17 9l5 6M22 9l-5 6" fill="none" /></svg>
+            <span class="sound-label">Sound on</span>
+          </button>
+        </div>
+        <button id="start" class="start" type="button" disabled>
+          <span class="start-label">Preparing the lake…</span>
+          <span class="progress" aria-hidden="true"><span class="progress-bar" id="progress"></span></span>
+        </button>
+        <p class="hint">
+          <span class="hint-desktop"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows to paddle · drag to look · scroll to zoom</span>
+          <span class="hint-touch">Hold the arrows to paddle · drag to look · pinch to zoom</span>
+        </p>
+      </section>
+
+      <div id="hud" class="hud" hidden>
+        <div class="hud-panel" role="toolbar" aria-label="Journey settings">
+          <div class="seg seg-sm" role="group" aria-label="Time of day">
+            <button type="button" data-time="dawn" aria-pressed="false">Dawn</button>
+            <button type="button" data-time="sunset" aria-pressed="true">Sunset</button>
+            <button type="button" data-time="night" aria-pressed="false">Night</button>
+          </div>
+          <div class="seg seg-sm" role="group" aria-label="Weather">
+            <button type="button" data-weather="clear" aria-pressed="true">Clear</button>
+            <button type="button" data-weather="rain" aria-pressed="false">Rain</button>
+          </div>
+          <button type="button" class="icon-btn" data-action="camera" aria-pressed="false" title="Cinematic camera (C)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="13" height="10" rx="2" fill="none" /><path d="M16 11l5-3v8l-5-3" fill="none" /></svg>
+            <span class="sr">Cinematic camera</span>
+          </button>
+          <button type="button" class="icon-btn" data-action="sound" aria-pressed="true" title="Sound (M)">
+            <svg class="i-sound-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" /></svg>
+            <svg class="i-sound-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M17 9l5 6M22 9l-5 6" fill="none" /></svg>
+            <span class="sr">Sound</span>
+          </button>
+          <button type="button" class="icon-btn" data-action="hide" title="Hide interface (H)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z" fill="none" /><circle cx="12" cy="12" r="2.6" fill="none" /><path d="M4 20L20 4" fill="none" /></svg>
+            <span class="sr">Hide interface</span>
+          </button>
+        </div>
+      </div>
+
+      <p id="controls-hint" class="controls-hint" hidden>
+        <span class="hint-desktop"><kbd>W</kbd><kbd>S</kbd> paddle · <kbd>A</kbd><kbd>D</kbd> steer · drag to look · <kbd>C</kbd> camera · <kbd>H</kbd> hide UI</span>
+        <span class="hint-touch">Hold arrows to paddle · drag to look · pinch to zoom</span>
+      </p>
+
+      <div id="caption" class="caption" aria-live="polite">
+        <strong class="caption-title"></strong>
+        <span class="caption-text"></span>
+      </div>
+
+      <div id="touch" class="touch" hidden>
+        <div class="touch-cluster touch-steer">
+          <button type="button" data-dir="left" aria-label="Steer left">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" /></svg>
+          </button>
+          <button type="button" data-dir="right" aria-label="Steer right">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" /></svg>
+          </button>
+        </div>
+        <div class="touch-cluster touch-drive">
+          <button type="button" data-dir="fwd" aria-label="Paddle forward">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15l7-7 7 7" fill="none" /></svg>
+          </button>
+          <button type="button" data-dir="back" aria-label="Paddle backward">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7" fill="none" /></svg>
+          </button>
+        </div>
+      </div>
+
+      <button id="restore" class="restore" type="button" hidden aria-label="Show interface">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z" fill="none" /><circle cx="12" cy="12" r="2.6" fill="none" /></svg>
+      </button>
+
+      <div id="notice" class="notice" hidden role="status"></div>
+
+      <div id="error" class="error" hidden role="alert">
+        <div class="error-card">
+          <h2 class="error-title">The lake could not be drawn</h2>
+          <p class="error-text"></p>
+          <details>
+            <summary>Technical details</summary>
+            <pre class="error-detail"></pre>
+          </details>
+          <button type="button" class="start error-reload">Reload</button>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
